@@ -1,0 +1,31 @@
+# ===== Monorepo-level ignores =====
+# Per-project .gitignore files cover Flutter (cocGream/) and Django (cocgream-backend/).
+# This file is for cross-cutting noise that lives at the repo root or anywhere.
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.idea/
+.vscode/
+*.swp
+*~
+
+# Local secrets — never commit these
+.env
+.env.local
+*.env.local
+
+# Logs / temp
+*.log
+run_log*.txt
+
+# Local build outputs (also covered by sub-project gitignores)
+**/build/
+**/.dart_tool/
+**/.gradle/
+**/staticfiles/
+**/__pycache__/
+*.pyc

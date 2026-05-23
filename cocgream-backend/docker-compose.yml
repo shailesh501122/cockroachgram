@@ -1,0 +1,84 @@
+# CockroachGram backend — one `docker compose up` brings everything online.
+#
+# Services:
+#   db    — Postgres 16
+#   redis — Redis 7 (cache + future Celery broker)
+#   minio — S3-compatible object storage (dev only; in prod point to AWS S3 / R2 / B2)
+#   api   — Django + Gunicorn
+#
+# First boot:
+#   cp .env.example .env
+#   docker compose up --build
+#   docker compose exec api python manage.py seed   # populates the demo content
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-cockroachgram}
+      POSTGRES_USER: ${POSTGRES_USER:-cockroach}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cockroach}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Dev-only S3-compatible storage. Point AWS_S3_ENDPOINT_URL at this and the
+  # same django-storages config works in dev and prod.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-cockroach}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-changeme-minio}
+    volumes:
+      - miniodata:/data
+    ports:
+      - "9000:9000"   # S3 API
+      - "9001:9001"   # console at http://localhost:9001
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      db: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      minio: { condition: service_healthy }
+    volumes:
+      - ./:/app
+      - mediadata:/app/media
+      - staticdata:/app/staticfiles
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  mediadata:
+  staticdata:
