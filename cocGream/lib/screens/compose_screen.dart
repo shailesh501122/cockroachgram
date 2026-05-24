@@ -20,18 +20,35 @@ class _ComposeScreenState extends State<ComposeScreen> {
   static const _audiences = ['Public', 'State only', 'Followers'];
   static const _audienceKeys = ['public', 'state', 'followers'];
 
-  final _controller = TextEditingController(
-    text: 'They called us pests. We call ourselves citizens. ',
-  );
+  final _controller = TextEditingController();
   int _audience = 0;
-  final Set<String> _tags = {'Youth'};
+  final Set<String> _tags = {};
   bool _busy = false;
   String? _error;
+
+  /// Topic chips — pulled live from the trending API.
+  List<String> _topicTags = const [];
 
   @override
   void initState() {
     super.initState();
     _controller.addListener(() => setState(() {}));
+    _loadTopicTags();
+  }
+
+  Future<void> _loadTopicTags() async {
+    try {
+      final trends = await TrendingRepository.instance.list(window: 'week');
+      if (!mounted) return;
+      setState(() {
+        _topicTags = trends
+            .map((t) => t.tag.replaceFirst('#', ''))
+            .take(12)
+            .toList();
+      });
+    } catch (_) {
+      // Best-effort — chips just stay empty if the API isn't reachable.
+    }
   }
 
   @override
@@ -106,16 +123,14 @@ class _ComposeScreenState extends State<ComposeScreen> {
                     onTap: _canPost ? _submit : null,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        gradient: _canPost ? CG.accentGradient : null,
-                        color: _canPost ? null : CG.bg3,
-                        borderRadius: BorderRadius.circular(999),
-                        boxShadow: _canPost ? CG.glow(blur: 14, y: 4) : null,
+                        color: _canPost ? CG.accent2 : CG.bg3,
+                        borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(_busy ? 'Posting…' : 'Post',
-                          style: T.heading(13,
-                              weight: FontWeight.w700,
+                          style: T.body(13,
+                              weight: FontWeight.w600,
                               color: _canPost ? CG.bg : CG.text3)),
                     ),
                   ),
@@ -132,8 +147,8 @@ class _ComposeScreenState extends State<ComposeScreen> {
                     Row(
                       children: [
                         Avatar(
-                          context.watch<AuthState>().currentUser?.initials ?? 'CG',
-                          size: 42,
+                          context.watch<AuthState>().currentUser?.initials ?? '?',
+                          size: 40,
                         ),
                         const SizedBox(width: 10),
                         Column(
@@ -142,32 +157,22 @@ class _ComposeScreenState extends State<ComposeScreen> {
                             Text(
                               context.watch<AuthState>().currentUser?.name
                                   ?? 'You',
-                              style: T.body(14, weight: FontWeight.w700),
+                              style: T.body(14, weight: FontWeight.w600),
                             ),
                             const SizedBox(height: 4),
                             GestureDetector(
                               onTap: () => setState(() =>
                                   _audience = (_audience + 1) % 3),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 10, vertical: 5),
-                                decoration: BoxDecoration(
-                                  border: Border.all(
-                                      color: CG.accent2
-                                          .withValues(alpha: 0.3)),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text('🪳 ${_audiences[_audience]}',
-                                        style: T.body(11,
-                                            weight: FontWeight.w700,
-                                            color: CG.accent2)),
-                                    const Icon(Icons.keyboard_arrow_down,
-                                        size: 12, color: CG.accent2),
-                                  ],
-                                ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(_audiences[_audience],
+                                      style: T.body(12,
+                                          weight: FontWeight.w500,
+                                          color: CG.accent2)),
+                                  const Icon(Icons.keyboard_arrow_down,
+                                      size: 14, color: CG.accent2),
+                                ],
                               ),
                             ),
                           ],
@@ -193,24 +198,26 @@ class _ComposeScreenState extends State<ComposeScreen> {
                       ),
                     ),
                     const SizedBox(height: 14),
-                    Text('TOPIC TAGS', style: T.labelSm()),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: [
-                        for (final t in kTopicTags)
-                          _TagChip(
-                            label: '#$t',
-                            active: _tags.contains(t),
-                            onTap: () => setState(() {
-                              _tags.contains(t)
-                                  ? _tags.remove(t)
-                                  : _tags.add(t);
-                            }),
-                          ),
-                      ],
-                    ),
+                    if (_topicTags.isNotEmpty) ...[
+                      Text('TRENDING THIS WEEK', style: T.labelSm()),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final t in _topicTags)
+                            _TagChip(
+                              label: '#$t',
+                              active: _tags.contains(t),
+                              onTap: () => setState(() {
+                                _tags.contains(t)
+                                    ? _tags.remove(t)
+                                    : _tags.add(t);
+                              }),
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -277,15 +284,14 @@ class _TagChip extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
-          gradient: active ? CG.accentGradient : null,
-          color: active ? null : CG.bg3,
-          border: Border.all(color: active ? Colors.transparent : CG.line),
+          color: active ? CG.accent2 : Colors.transparent,
+          border: Border.all(color: active ? CG.accent2 : CG.line2),
           borderRadius: BorderRadius.circular(999),
         ),
         child: Text(
           label,
           style: T.body(12,
-              weight: FontWeight.w600, color: active ? CG.bg : CG.text2),
+              weight: FontWeight.w500, color: active ? CG.bg : CG.text2),
         ),
       ),
     );

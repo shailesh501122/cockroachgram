@@ -1,8 +1,7 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
-/// Circular avatar with initials/emoji, optionally wrapped in an amber ring.
+/// Circular avatar with initials/emoji. Optionally wrapped in a 2px amber ring.
 class Avatar extends StatelessWidget {
   final String label;
   final double size;
@@ -17,19 +16,12 @@ class Avatar extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: ring
-            ? null
-            : const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [CG.line2, CG.bg3],
-              ),
-        color: ring ? CG.bg2 : null,
+        color: CG.bg2,
         border: ring ? null : Border.all(color: CG.line2),
       ),
       child: Text(
         label,
-        style: T.heading(size * 0.4, weight: FontWeight.w800),
+        style: T.body(size * 0.38, weight: FontWeight.w600, height: 1),
       ),
     );
     if (!ring) return inner;
@@ -37,9 +29,16 @@ class Avatar extends StatelessWidget {
       padding: const EdgeInsets.all(2),
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        gradient: CG.accentGradient,
+        color: CG.accent2,
       ),
-      child: inner,
+      child: Container(
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          color: CG.bg,
+        ),
+        padding: const EdgeInsets.all(2),
+        child: inner,
+      ),
     );
   }
 }
@@ -101,7 +100,8 @@ class IconBtn extends StatelessWidget {
   }
 }
 
-/// The CockroachGram top app bar — brand logo + search / chat / bell actions.
+/// The CockroachGram top app bar — clean Instagram-style:
+/// wordmark on the left, naked action icons on the right (no boxes).
 class AppHeader extends StatelessWidget {
   final VoidCallback? onSearch;
   final VoidCallback? onChat;
@@ -109,27 +109,44 @@ class AppHeader extends StatelessWidget {
   final bool unread;
   const AppHeader({super.key, this.onSearch, this.onChat, this.onBell, this.unread = true});
 
+  Widget _navIcon(IconData icon, {VoidCallback? onTap, bool dot = false}) =>
+      GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon, size: 24, color: CG.text),
+              if (dot)
+                Positioned(
+                  top: -1,
+                  right: -1,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: CG.accent2,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(18, 6, 18, 12),
+      padding: const EdgeInsets.fromLTRB(18, 10, 12, 10),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              gradient: CG.accentGradient,
-              borderRadius: BorderRadius.circular(10),
-              boxShadow: CG.glow(blur: 12, y: 4),
-            ),
-            child: const Text('🪳', style: TextStyle(fontSize: 18)),
-          ),
-          const SizedBox(width: 8),
           Text.rich(
             TextSpan(
-              style: T.display(26),
+              style: T.heading(22,
+                  weight: FontWeight.w700, letterSpacing: -0.5),
               children: const [
                 TextSpan(text: 'Cockroach'),
                 TextSpan(text: 'Gram', style: TextStyle(color: CG.accent2)),
@@ -137,18 +154,16 @@ class AppHeader extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          IconBtn(Icons.search, onTap: onSearch),
-          const SizedBox(width: 4),
-          IconBtn(Icons.chat_bubble_outline, onTap: onChat),
-          const SizedBox(width: 4),
-          IconBtn(Icons.notifications_none_rounded, dot: unread, onTap: onBell),
+          _navIcon(Icons.search, onTap: onSearch),
+          _navIcon(Icons.chat_bubble_outline, onTap: onChat),
+          _navIcon(Icons.favorite_border, dot: unread, onTap: onBell),
         ],
       ),
     );
   }
 }
 
-/// Filled-gradient or ghost button matching the `.btn` styles.
+/// Flat amber primary or outlined ghost button — Instagram-clean.
 class CGButton extends StatelessWidget {
   final String label;
   final bool primary;
@@ -170,19 +185,19 @@ class CGButton extends StatelessWidget {
       child: GestureDetector(
         onTap: disabled ? null : onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 22),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 22),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            gradient: primary ? CG.accentGradient : null,
-            color: primary ? null : CG.accent2.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(14),
+            color: primary ? CG.accent2 : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
             border: primary ? null : Border.all(color: CG.line2),
-            boxShadow: primary ? CG.glow() : null,
           ),
           child: Text(
             label,
-            style: T.heading(14, weight: FontWeight.w700, spacingEm: 0.02)
-                .copyWith(color: primary ? CG.bg : CG.text),
+            style: T.body(14,
+                weight: FontWeight.w600,
+                color: primary ? CG.bg : CG.text,
+                letterSpacing: 0.1),
           ),
         ),
       ),
@@ -208,49 +223,34 @@ class CGTabs extends StatelessWidget {
       decoration: const BoxDecoration(
         border: Border(bottom: BorderSide(color: CG.line)),
       ),
-      padding: const EdgeInsets.fromLTRB(14, 4, 14, 0),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
         child: Row(
           children: [
             for (var i = 0; i < labels.length; i++)
               GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => onChanged(i),
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 4, bottom: 10),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: i == selected
-                              ? CG.accent2.withValues(alpha: 0.1)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          labels[i],
-                          style: T.body(
-                            13,
-                            weight: FontWeight.w600,
-                            color: i == selected ? CG.text : CG.text3,
-                          ),
-                        ),
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      bottom: BorderSide(
+                        width: 1.5,
+                        color:
+                            i == selected ? CG.accent2 : Colors.transparent,
                       ),
-                      const SizedBox(height: 4),
-                      LayoutBuilder(
-                        builder: (context, _) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          height: 2,
-                          width: i == selected ? 36 : 0,
-                          decoration: BoxDecoration(
-                            color: CG.accent2,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
+                  ),
+                  child: Text(
+                    labels[i],
+                    style: T.body(
+                      13,
+                      weight:
+                          i == selected ? FontWeight.w600 : FontWeight.w500,
+                      color: i == selected ? CG.text : CG.text3,
+                    ),
                   ),
                 ),
               ),
@@ -306,69 +306,53 @@ class CGBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          height: 84,
-          padding: const EdgeInsets.fromLTRB(8, 8, 8, 24),
-          decoration: BoxDecoration(
-            color: CG.bg.withValues(alpha: 0.75),
-            border: Border(
-              top: BorderSide(color: CG.accent2.withValues(alpha: 0.12)),
-            ),
-          ),
-          child: Row(
-            children: [
-              _navItem(0, 'Home', Icons.home_rounded),
-              _navItem(1, 'Trends', Icons.trending_up_rounded),
-              _composeItem(),
-              _navItem(3, 'Alerts', Icons.notifications_none_rounded, dot: true),
-              _navItem(4, 'Profile', Icons.person_outline_rounded),
-            ],
-          ),
-        ),
+    return Container(
+      height: 72,
+      padding: const EdgeInsets.fromLTRB(8, 6, 8, 16),
+      decoration: const BoxDecoration(
+        color: CG.bg,
+        border: Border(top: BorderSide(color: CG.line)),
+      ),
+      child: Row(
+        children: [
+          _navItem(0, 'Home', Icons.home_outlined, Icons.home_rounded),
+          _navItem(1, 'Trends', Icons.trending_up_rounded, Icons.trending_up_rounded),
+          _composeItem(),
+          _navItem(3, 'Alerts', Icons.favorite_border, Icons.favorite, dot: true),
+          _navItem(4, 'Profile', Icons.person_outline, Icons.person),
+        ],
       ),
     );
   }
 
-  Widget _navItem(int index, String label, IconData icon, {bool dot = false}) {
+  Widget _navItem(int index, String _, IconData iconOff, IconData iconOn,
+      {bool dot = false}) {
     final isActive = active == index;
+    final icon = isActive ? iconOn : iconOff;
     return Expanded(
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: () => onNav(index),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, size: 22, color: isActive ? CG.accent2 : CG.text3),
-                if (dot)
-                  Positioned(
-                    top: -2,
-                    right: -4,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: CG.accent2,
-                        boxShadow: CG.glow(blur: 6, y: 0),
-                      ),
+        child: Center(
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Icon(icon, size: 26, color: isActive ? CG.accent2 : CG.text),
+              if (dot)
+                Positioned(
+                  top: -1,
+                  right: -2,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: CG.accent2,
                     ),
                   ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: T.body(10,
-                  weight: FontWeight.w600,
-                  color: isActive ? CG.accent2 : CG.text3),
-            ),
-          ],
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -378,14 +362,17 @@ class CGBottomNav extends StatelessWidget {
     return Expanded(
       child: GestureDetector(
         onTap: onCompose,
-        child: Container(
-          margin: const EdgeInsets.fromLTRB(8, 6, 8, 14),
-          decoration: BoxDecoration(
-            gradient: CG.accentGradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: CG.glow(blur: 20),
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: CG.accent2,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Icon(Icons.add, size: 22, color: CG.bg),
           ),
-          child: const Icon(Icons.add, size: 22, color: CG.bg),
         ),
       ),
     );

@@ -40,7 +40,7 @@ class CockroachGramApp extends StatelessWidget {
             secondary: CG.accent,
             surface: CG.bg2,
           ),
-          textTheme: GoogleFonts.dmSansTextTheme(base.textTheme)
+          textTheme: GoogleFonts.poppinsTextTheme(base.textTheme)
               .apply(bodyColor: CG.text, displayColor: CG.text),
           textSelectionTheme: TextSelectionThemeData(
             cursorColor: CG.accent2,

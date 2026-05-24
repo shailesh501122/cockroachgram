@@ -144,7 +144,7 @@ class _MainShellState extends State<MainShell> {
       ),
       TrendingScreen(onBell: () => _onNav(3)),
       const NotificationsScreen(),
-      ProfileScreen(onSignOut: _signOut),
+      ProfileScreen(onSignOut: _signOut, posts: _posts),
     ];
 
     return Scaffold(
@@ -154,44 +154,17 @@ class _MainShellState extends State<MainShell> {
         child: Column(
           children: [
             Expanded(
-              child: Stack(
-                children: [
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 320),
-                    transitionBuilder: (child, anim) => FadeTransition(
-                      opacity: anim,
-                      child: SlideTransition(
-                        position: Tween(
-                          begin: const Offset(0, 0.02),
-                          end: Offset.zero,
-                        ).animate(anim),
-                        child: child,
-                      ),
-                    ),
-                    child: KeyedSubtree(
-                      key: ValueKey(_slot),
-                      child: screens[_slot],
-                    ),
-                  ),
-                  if (_tab == 0)
-                    Positioned(
-                      bottom: 18,
-                      right: 18,
-                      child: GestureDetector(
-                        onTap: _openCompose,
-                        child: Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            gradient: CG.accentGradient,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: CG.glow(blur: 32, y: 12),
-                          ),
-                          child: const Icon(Icons.add, size: 26, color: CG.bg),
-                        ),
-                      ),
-                    ),
-                ],
+              // No FAB — Instagram doesn't have one; the bottom-nav '+' is enough.
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 220),
+                transitionBuilder: (child, anim) => FadeTransition(
+                  opacity: anim,
+                  child: child,
+                ),
+                child: KeyedSubtree(
+                  key: ValueKey(_slot),
+                  child: screens[_slot],
+                ),
               ),
             ),
             CGBottomNav(

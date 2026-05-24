@@ -10,7 +10,10 @@ String fmt(int n) {
   return '$n';
 }
 
-// ===== Static lookup data =====
+// ===== Reference data (constant, not content) =====
+// The only static list kept — the 28 + 8 administrative regions of India,
+// used in the signup state dropdown. Everything else (stories, topic tags,
+// posts, notifications, trending) is fetched from the API.
 const kStates = <String>[
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa',
   'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
@@ -18,31 +21,6 @@ const kStates = <String>[
   'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura',
   'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir',
   'Ladakh', 'Puducherry', 'Chandigarh',
-];
-
-const kTopicTags = <String>[
-  'BJP', 'Congress', 'AAP', 'Economy', 'Youth', 'Jobs', 'Corruption',
-  'Farmers', 'Education',
-];
-
-// Stories are still local for v1 — the API doesn't expose them yet.
-class Story {
-  final String name;
-  final String? initials;
-  final bool first;
-  final bool verified;
-  const Story({required this.name, this.initials, this.first = false, this.verified = false});
-}
-
-const kStories = <Story>[
-  Story(name: 'Your story', first: true),
-  Story(name: 'CJP', initials: 'CJ', verified: true),
-  Story(name: 'Arundhati', initials: 'AR'),
-  Story(name: 'Manish K', initials: 'MK'),
-  Story(name: 'Priya S', initials: 'PS'),
-  Story(name: 'Ravi B', initials: 'RB'),
-  Story(name: 'Anjali', initials: 'AN'),
-  Story(name: 'Vikram', initials: 'VI'),
 ];
 
 // ===== User =====
