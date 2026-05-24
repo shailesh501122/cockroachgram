@@ -3,6 +3,7 @@
 
 Idempotent — running it twice doesn't create duplicate users / posts.
 """
+
 import os
 import random
 
@@ -10,10 +11,9 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.utils import timezone
 
-from apps.notifications.models import Notification, NotifType
+from apps.notifications.models import Notification
 from apps.posts.models import Comment, Hashtag, Like, Post, Repost
 from apps.users.models import Follow, User
-
 
 DEMO_USERS = [
     # (username, name, state, verified, bio)
