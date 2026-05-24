@@ -1,0 +1,106 @@
+name: CI
+
+# Lints + tests for both projects.  Runs on every PR and every push.
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**/README.md", "**/*.md"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────────
+  # Flutter app  (lib/)
+  # ────────────────────────────────────────────────────────────────
+  app:
+    name: app · flutter analyze + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cocGream
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.3'
+          channel: stable
+          cache: true
+
+      - run: flutter --version
+
+      - name: pub get
+        run: flutter pub get
+
+      - name: analyze
+        run: flutter analyze --fatal-infos
+
+      - name: test
+        run: flutter test --reporter expanded
+
+  # ────────────────────────────────────────────────────────────────
+  # Django backend  (cocgream-backend/)
+  # ────────────────────────────────────────────────────────────────
+  backend:
+    name: backend · ruff + pytest
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cocgream-backend
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: cockroachgram_test
+          POSTGRES_USER: cockroach
+          POSTGRES_PASSWORD: changeme
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U cockroach"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SECRET_KEY: ci-only-not-secret
+      DJANGO_DEBUG: "true"
+      DATABASE_URL: postgres://cockroach:changeme@localhost:5432/cockroachgram_test
+      REDIS_URL: redis://localhost:6379/0
+      USE_S3: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: install deps
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+
+      - name: ruff
+        run: ruff check .
+
+      - name: migrate (sanity)
+        run: python manage.py migrate --noinput
+
+      - name: pytest
+        run: pytest -q

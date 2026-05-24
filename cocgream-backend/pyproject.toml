@@ -1,0 +1,28 @@
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["migrations", "staticfiles", "media"]
+
+[tool.ruff.lint]
+select = [
+  "E", "F", "W",   # pycodestyle / pyflakes
+  "I",             # isort
+  "B",             # bugbear
+  "UP",            # pyupgrade
+  "DJ",            # Django-specific
+]
+ignore = [
+  "E501",          # line length — handled by formatter, not lint-enforced
+  "B008",          # do not perform function calls in argument defaults (DRF needs this)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"settings.py" = ["F405", "F403"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "-ra --strict-markers"
+filterwarnings = [
+  "ignore::DeprecationWarning:django.*",
+]

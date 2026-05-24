@@ -1,0 +1,35 @@
+# Production overrides — merged on top of `docker-compose.yml`.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Differences from dev:
+#   • api uses the pre-built image from GHCR instead of building from source
+#   • no source-code bind mount (image already has it baked in)
+#   • Postgres / MinIO ports are NOT exposed to the public interface
+#   • api binds to host :80 so the bare IP works
+#   • everything restarts on host reboot
+
+services:
+  api:
+    image: ghcr.io/shailesh501122/cockroachgram-api:latest
+    pull_policy: always
+    build: null                  # disable the build context for prod
+    volumes:
+      - mediadata:/app/media
+      - staticdata:/app/staticfiles
+    ports: !override
+      - "80:8000"
+    restart: always
+
+  db:
+    ports: !reset []             # don't expose Postgres publicly
+    restart: always
+
+  redis:
+    restart: always
+
+  minio:
+    ports: !override             # console + S3 reachable only on the loopback
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    restart: always
