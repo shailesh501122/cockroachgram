@@ -24,15 +24,31 @@ if [ ! -f .env ]; then
   cp .env.example .env
 fi
 SECRET="$(openssl rand -hex 48)"
-sed -i "s|^DJANGO_SECRET_KEY=.*|DJANGO_SECRET_KEY=${SECRET}|" .env
-sed -i 's|^DJANGO_DEBUG=.*|DJANGO_DEBUG=false|' .env
-sed -i 's|^DJANGO_ALLOWED_HOSTS=.*|DJANGO_ALLOWED_HOSTS=*|' .env
-sed -i 's|^DJANGO_CORS_ORIGINS=.*|DJANGO_CORS_ORIGINS=|' .env
-sed -i 's|^DJANGO_SECURE_SSL_REDIRECT=.*|DJANGO_SECURE_SSL_REDIRECT=false|' .env
-# Bare-IP deploys can't get a TLS cert yet — make sure we never redirect to https.
-grep -q '^DJANGO_SECURE_SSL_REDIRECT=' .env || echo 'DJANGO_SECURE_SSL_REDIRECT=false' >> .env
-# Use local filesystem storage for now (saves ~100MB by skipping MinIO).
-sed -i 's|^USE_S3=.*|USE_S3=false|' .env
+PUB_IP="$(curl -s --max-time 3 https://ifconfig.me || echo '')"
+
+set_env() {
+  local k=$1 v=$2
+  if grep -q "^${k}=" .env; then
+    sed -i "s|^${k}=.*|${k}=${v}|" .env
+  else
+    echo "${k}=${v}" >> .env
+  fi
+}
+
+set_env DJANGO_SECRET_KEY "${SECRET}"
+set_env DJANGO_DEBUG "false"
+set_env DJANGO_ALLOWED_HOSTS "*"
+set_env DJANGO_CORS_ORIGINS ""
+# Bare-IP HTTP: no TLS yet, so flip the cookie/HSTS/redirect knobs off.
+set_env DJANGO_SECURE_SSL_REDIRECT "false"
+set_env DJANGO_SECURE_COOKIES "false"
+set_env DJANGO_HSTS_SECONDS "0"
+# CSRF trusted origins — needed for the admin login over plain HTTP.
+if [ -n "$PUB_IP" ]; then
+  set_env DJANGO_CSRF_TRUSTED_ORIGINS "http://${PUB_IP},https://${PUB_IP}"
+fi
+# Local filesystem storage for media (saves ~100MB by skipping MinIO).
+set_env USE_S3 "false"
 
 # ─── 3. Disable MinIO on this 1GB host ───────────────────────────
 log "3/5 · write docker-compose.override.yml (drop MinIO + bind api to :80)"

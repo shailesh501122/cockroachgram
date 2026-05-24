@@ -155,6 +155,11 @@ CORS_ALLOWED_ORIGINS = env.list("DJANGO_CORS_ORIGINS", default=[])
 CORS_ALLOW_ALL_ORIGINS = DEBUG and not CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
+# ===== CSRF =====
+# Django 4+ requires the request Origin to match. With DEBUG=False the admin
+# login POST is rejected if the deployment URL isn't whitelisted here.
+CSRF_TRUSTED_ORIGINS = env.list("DJANGO_CSRF_TRUSTED_ORIGINS", default=[])
+
 # ===== I18N =====
 LANGUAGE_CODE = "en-in"
 TIME_ZONE = "Asia/Kolkata"
@@ -192,12 +197,14 @@ else:
     MEDIA_ROOT = BASE_DIR / "media"
 
 # ===== Security (production) =====
+# Cookie / HSTS toggles can be relaxed on bare-IP HTTP deploys, then flipped
+# back on once a TLS-terminating proxy (Caddy / nginx + Let's Encrypt) lands.
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SECURE_SSL_REDIRECT = env.bool("DJANGO_SECURE_SSL_REDIRECT", default=True)
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365  # 1y
+    SESSION_COOKIE_SECURE = env.bool("DJANGO_SECURE_COOKIES", default=True)
+    CSRF_COOKIE_SECURE = env.bool("DJANGO_SECURE_COOKIES", default=True)
+    SECURE_HSTS_SECONDS = env.int("DJANGO_HSTS_SECONDS", default=60 * 60 * 24 * 365)
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     X_FRAME_OPTIONS = "DENY"
