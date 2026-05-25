@@ -1,27 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// CockroachGram design tokens — Instagram-clean: one font (Poppins),
-/// thin lines, amber as a single accent (no gradients, minimal glow).
+/// CockroachGram design tokens — Instagram-clean light theme.
+/// White backgrounds, dark text, amber as the only accent.
 class CG {
   CG._();
 
   // ===== Colors =====
-  static const bg = Color(0xFF1A0F00);
-  static const bg2 = Color(0xFF231500);
-  static const bg3 = Color(0xFF2D1D05);
-  static const line = Color(0xFF2A1A05);   // hair-line border
-  static const line2 = Color(0xFF3A2710);  // slightly stronger border
-  static const accent = Color(0xFFC8720A);
-  static const accent2 = Color(0xFFFF9F2E);
-  static const accentSoft = Color(0x29FF9F2E);    // 16% alpha — chips, hover
-  static const accentGlow = Color(0x33FF9F2E);    // 20% alpha — light shadows
-  static const text = Color(0xFFF5E6C8);
-  static const text2 = Color(0xFFC9B99A);
-  static const text3 = Color(0xFF7A6A4A);
-  static const danger = Color(0xFFE03030);
-  static const success = Color(0xFF2ECC71);
-  static const info = Color(0xFF4EA1FF);
+  static const bg = Color(0xFFFFFFFF);           // page background — pure white
+  static const bg2 = Color(0xFFFAFAFA);          // cards / inputs — off-white
+  static const bg3 = Color(0xFFF3F4F6);          // chips / surfaces — light gray
+  static const line = Color(0xFFEFEFEF);         // hairline borders
+  static const line2 = Color(0xFFDBDBDB);        // stronger borders
+  static const accent = Color(0xFFC8720A);       // brand amber (dark)
+  static const accent2 = Color(0xFFE08A0E);      // brand amber (primary on white)
+  static const accentSoft = Color(0x1FE08A0E);   // ~12% alpha — chip/hover fills
+  static const accentGlow = Color(0x14E08A0E);   // ~8% alpha — subtle lift
+  static const text = Color(0xFF0F172A);         // near-black primary
+  static const text2 = Color(0xFF475569);        // secondary
+  static const text3 = Color(0xFF94A3B8);        // muted (icons-off, timestamps)
+  static const danger = Color(0xFFED4956);       // Instagram-ish red (likes)
+  static const success = Color(0xFF16A34A);
+  static const info = Color(0xFF2563EB);
 
   // ===== Radii =====
   static const rSm = 8.0;
@@ -29,9 +29,7 @@ class CG {
   static const rLg = 16.0;
   static const rXl = 22.0;
 
-  // ===== Accent =====
-  // Single solid amber for buttons / FAB / chips. The gradient stays for the
-  // brand wordmark on the splash and a few hero tiles — kept subtle.
+  // ===== Accent helpers =====
   static const accentColor = accent2;
   static const accentGradient = LinearGradient(
     begin: Alignment.topLeft,
@@ -39,8 +37,8 @@ class CG {
     colors: [accent, accent2],
   );
 
-  /// Soft amber shadow. Returns empty by default — pass `enabled: true`
-  /// for the rare element that genuinely needs a hint of lift.
+  /// Optional soft amber shadow. Empty by default — light-theme cards rely
+  /// on hairline borders, not shadows.
   static List<BoxShadow> glow({double blur = 0, double y = 0, bool enabled = false}) =>
       enabled
           ? [BoxShadow(color: accentGlow, blurRadius: blur, offset: Offset(0, y))]
@@ -60,7 +58,7 @@ class T {
     double size, {
     Color color = CG.text,
     double? letterSpacing,
-    double? spacingEm, // legacy: relative letter-spacing (1.0 = font size)
+    double? spacingEm,
     double height = 1.05,
   }) =>
       GoogleFonts.poppins(
@@ -78,7 +76,7 @@ class T {
     Color color = CG.text,
     FontWeight weight = _headingWeight,
     double? letterSpacing,
-    double? spacingEm, // legacy
+    double? spacingEm,
     double height = 1.25,
   }) =>
       GoogleFonts.poppins(

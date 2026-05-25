@@ -12,10 +12,11 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      statusBarBrightness: Brightness.dark,
+      statusBarIconBrightness: Brightness.dark,   // dark icons on light bar
+      statusBarBrightness: Brightness.light,
       systemNavigationBarColor: CG.bg,
-      systemNavigationBarIconBrightness: Brightness.light,
+      systemNavigationBarIconBrightness: Brightness.dark,
+      systemNavigationBarDividerColor: CG.line,
     ),
   );
   runApp(const CockroachGramApp());
@@ -27,7 +28,7 @@ class CockroachGramApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final base = ThemeData.dark(useMaterial3: true);
+    final base = ThemeData.light(useMaterial3: true);
     return ChangeNotifierProvider(
       create: (_) => AuthState()..bootstrap(),
       child: MaterialApp(
@@ -36,15 +37,17 @@ class CockroachGramApp extends StatelessWidget {
         theme: base.copyWith(
           scaffoldBackgroundColor: CG.bg,
           colorScheme: base.colorScheme.copyWith(
+            brightness: Brightness.light,
             primary: CG.accent2,
             secondary: CG.accent,
-            surface: CG.bg2,
+            surface: CG.bg,
+            onSurface: CG.text,
           ),
           textTheme: GoogleFonts.poppinsTextTheme(base.textTheme)
               .apply(bodyColor: CG.text, displayColor: CG.text),
-          textSelectionTheme: TextSelectionThemeData(
+          textSelectionTheme: const TextSelectionThemeData(
             cursorColor: CG.accent2,
-            selectionColor: CG.accentGlow,
+            selectionColor: CG.accentSoft,
             selectionHandleColor: CG.accent2,
           ),
           splashColor: CG.accent2.withValues(alpha: 0.08),

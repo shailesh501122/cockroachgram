@@ -56,8 +56,8 @@ class _SplashScreenState extends State<SplashScreen> {
         decoration: const BoxDecoration(
           gradient: RadialGradient(
             center: Alignment(0, -0.45),
-            radius: 1.1,
-            colors: [Color(0xFF2A1700), CG.bg],
+            radius: 1.2,
+            colors: [Color(0xFFFEF3E2), CG.bg],   // soft amber wash → white
           ),
         ),
         child: SafeArea(
