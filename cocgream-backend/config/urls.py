@@ -44,3 +44,13 @@ if settings.DEBUG and not getattr(settings, "USE_S3", False):
 admin.site.site_header = "🪳 CockroachGram Admin"
 admin.site.site_title = "CockroachGram"
 admin.site.index_title = "Operations · Members · Posts · Movement"
+
+# After a successful Django-admin login, the user lands on the admin index.
+# Swap that index for a redirect into the new dashboard at /cgadmin/ so the
+# old yellow Django admin only shows up if someone navigates into a model
+# CRUD page (e.g. /admin/posts/post/) directly.
+def _admin_index_to_cgadmin(_request, *_args, **_kwargs):
+    return redirect("/cgadmin/")
+
+
+admin.site.index = _admin_index_to_cgadmin
