@@ -4,7 +4,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.shortcuts import redirect
-from django.urls import include, path
+from django.urls import include, path, re_path
 from drf_spectacular.views import (
     SpectacularAPIView,
     SpectacularRedocView,
@@ -24,6 +24,9 @@ urlpatterns = [
     # /admin/   → raw Django admin, also our auth endpoint for /cgadmin/.
     path("", lambda r: redirect("/cgadmin/")),
     path("cgadmin/", AdminUIView.as_view(), name="cgadmin"),
+    # Match /admin/ *exactly* and bounce to the new UI. Everything under
+    # /admin/ (login, password reset, model CRUD) still routes to Django admin.
+    re_path(r"^admin/$", lambda r: redirect("/cgadmin/")),
     path("admin/", admin.site.urls),
     path("api/health/", health),
     path("api/auth/", include("apps.users.urls_auth")),
@@ -45,12 +48,6 @@ admin.site.site_header = "🪳 CockroachGram Admin"
 admin.site.site_title = "CockroachGram"
 admin.site.index_title = "Operations · Members · Posts · Movement"
 
-# After a successful Django-admin login, the user lands on the admin index.
-# Swap that index for a redirect into the new dashboard at /cgadmin/ so the
-# old yellow Django admin only shows up if someone navigates into a model
-# CRUD page (e.g. /admin/posts/post/) directly.
-def _admin_index_to_cgadmin(_request, *_args, **_kwargs):
-    return redirect("/cgadmin/")
-
-
-admin.site.index = _admin_index_to_cgadmin
+# (admin index redirect handled by the `re_path(r"^admin/$", ...)` above —
+# overriding admin.site.index in place is too late; URL patterns have already
+# resolved to the original bound method by this point.)
